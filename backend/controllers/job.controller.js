@@ -1,7 +1,8 @@
 import { Job } from "../models/job.model.js";
+import { ResourceNotFoundError } from "../utils/errors.js";
 
 // admin post krega job
-export const postJob = async (req, res) => {
+export const postJob = async (req, res, next) => {
     try {
         const { title, description, requirements, salary, location, jobType, experience, position, companyId } = req.body;
         const userId = req.id;
@@ -30,11 +31,11 @@ export const postJob = async (req, res) => {
             success: true
         });
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
 // student k liye
-export const getAllJobs = async (req, res) => {
+export const getAllJobs = async (req, res, next) => {
     try {
         const keyword = req.query.keyword || "";
         const query = {
@@ -46,57 +47,48 @@ export const getAllJobs = async (req, res) => {
         const jobs = await Job.find(query).populate({
             path: "company"
         }).sort({ createdAt: -1 });
-        if (!jobs) {
-            return res.status(404).json({
-                message: "Jobs not found.",
-                success: false
-            })
-        };
+        if (!jobs || jobs.length === 0) {
+            throw new ResourceNotFoundError("Jobs not found");
+        }
         return res.status(200).json({
             jobs,
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
 // student
-export const getJobById = async (req, res) => {
+export const getJobById = async (req, res, next) => {
     try {
         const jobId = req.params.id;
         const job = await Job.findById(jobId).populate({
             path:"applications"
         });
         if (!job) {
-            return res.status(404).json({
-                message: "Jobs not found.",
-                success: false
-            })
-        };
+            throw new ResourceNotFoundError("Job not found");
+        }
         return res.status(200).json({ job, success: true });
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
 // admin kitne job create kra hai abhi tk
-export const getAdminJobs = async (req, res) => {
+export const getAdminJobs = async (req, res, next) => {
     try {
         const adminId = req.id;
         const jobs = await Job.find({ created_by: adminId }).populate({
             path:'company',
             createdAt:-1
         });
-        if (!jobs) {
-            return res.status(404).json({
-                message: "Jobs not found.",
-                success: false
-            })
-        };
+        if (!jobs || jobs.length === 0) {
+            throw new ResourceNotFoundError("Jobs not found");
+        }
         return res.status(200).json({
             jobs,
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
