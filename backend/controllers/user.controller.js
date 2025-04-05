@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { ResourceNotFoundError, InvalidRequestMethodError } from "../utils/errors.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
@@ -43,10 +44,10 @@ export const register = async (req, res) => {
             success: true
         });
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password, role } = req.body;
         
@@ -98,20 +99,20 @@ export const login = async (req, res) => {
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
     try {
         return res.status(200).cookie("token", "", { maxAge: 0 }).json({
             message: "Logged out successfully.",
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         
@@ -130,10 +131,7 @@ export const updateProfile = async (req, res) => {
         let user = await User.findById(userId);
 
         if (!user) {
-            return res.status(400).json({
-                message: "User not found.",
-                success: false
-            })
+            throw new ResourceNotFoundError("User not found");
         }
         // updating data
         if(fullname) user.fullname = fullname
@@ -166,6 +164,6 @@ export const updateProfile = async (req, res) => {
             success:true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }

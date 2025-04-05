@@ -32,7 +32,9 @@ app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
-
+// Error handling middleware (must be after all routes)
+import errorHandler from "./middlewares/errorHandler.js";
+app.use(errorHandler);
 
 app.listen(PORT,()=>{
     connectDB();

@@ -1,8 +1,9 @@
 import { Company } from "../models/company.model.js";
+import { ResourceNotFoundError } from "../utils/errors.js";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 
-export const registerCompany = async (req, res) => {
+export const registerCompany = async (req, res, next) => {
     try {
         const { companyName } = req.body;
         if (!companyName) {
@@ -29,10 +30,10 @@ export const registerCompany = async (req, res) => {
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
-export const getCompany = async (req, res) => {
+export const getCompany = async (req, res, next) => {
     try {
         const userId = req.id; // logged in user id
         const companies = await Company.find({ userId });
@@ -47,29 +48,26 @@ export const getCompany = async (req, res) => {
             success:true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
 // get company by id
-export const getCompanyById = async (req, res) => {
+export const getCompanyById = async (req, res, next) => {
     try {
         const companyId = req.params.id;
         const company = await Company.findById(companyId);
         if (!company) {
-            return res.status(404).json({
-                message: "Company not found.",
-                success: false
-            })
+            throw new ResourceNotFoundError("Company not found");
         }
         return res.status(200).json({
             company,
             success: true
         })
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
-export const updateCompany = async (req, res) => {
+export const updateCompany = async (req, res, next) => {
     try {
         const { name, description, website, location } = req.body;
  
@@ -84,10 +82,7 @@ export const updateCompany = async (req, res) => {
         const company = await Company.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
         if (!company) {
-            return res.status(404).json({
-                message: "Company not found.",
-                success: false
-            })
+            throw new ResourceNotFoundError("Company not found");
         }
         return res.status(200).json({
             message:"Company information updated.",
@@ -95,6 +90,6 @@ export const updateCompany = async (req, res) => {
         })
 
     } catch (error) {
-        console.log(error);
+        next(error);
     }
 }
